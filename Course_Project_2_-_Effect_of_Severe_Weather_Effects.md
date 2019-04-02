@@ -7,9 +7,7 @@ output:
     keep_md: yes
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+
 
 ## Synopsis
 
@@ -34,8 +32,8 @@ This project involves exploring the U.S. National Oceanic and Atmospheric Admini
 
 ### Load and read data
 The following code shows how the data is downloaded into R.
-```{r, cache = TRUE}
 
+```r
 # Install required packages if necessary
 # install.packages("dplyr")
 # install.packages("tidyverse")
@@ -63,7 +61,8 @@ file <- './data/storm_data.csv.bz2'
 ```
 
 The following code shows how the data is loaded into R and read into a data frame.
-```{r, cache = TRUE}
+
+```r
 # Create data frame df from read.csv
 df <- read.csv("./data/storm_data.csv.bz2",
                header = TRUE,
@@ -76,9 +75,14 @@ df <- read.csv("./data/storm_data.csv.bz2",
 dim(df)
 ```
 
+```
+## [1] 902297     37
+```
+
 ### Simplify data frame
 Remove columns that are not relevant for answering the relevant questions. As mentioned in the limitiations, we only evaluate the aggregated effect of severe weather on health and economy. Hence, all columns describing time and location is removed.
-```{r, cache = TRUE}
+
+```r
 # Identify columns to be removed
 drop <- c("STATE__", "BGN_DATE", "BGN_TIME", "TIME_ZONE", "COUNTY", "COUNTYNAME", "STATE", "BGN_RANGE", "BGN_AZI","BGN_LOCATI", "END_DATE", "END_TIME", "COUNTY_END", "COUNTYENDN", "END_RANGE", "END_AZI", "END_LOCATI", "LENGTH", "WIDTH", "F", "MAG", "WFO","STATEOFFIC", "ZONENAMES", "LATITUDE", "LONGITUDE", "LATITUDE_E", "LONGITUDE_", "REMARKS", "REFNUM")
 
@@ -89,7 +93,8 @@ df <- df %>%
 
 ### Financial cost data frame
 Clean the columns for economic damage by combining the number and the factor (thousand, million, billion, etc.). For unknown factors, replace with 1.
-```{r, cache = TRUE}
+
+```r
 # Replace factors with integers for both property damage and crop damage
 
 df<- df %>% 
@@ -126,7 +131,8 @@ df <- df %>%
 ```
 
 Find final value in economic consequence by combining the two columns (number and factor - thousands, millions, etc.).
-```{r, cache = TRUE}
+
+```r
 # Remove unneccesary columns and find the number of financial cost.
 harm_economy <- df %>%
         select(-one_of(c("FATALITIES", "INJURIES"))) %>%
@@ -134,8 +140,19 @@ harm_economy <- df %>%
         mutate(CROP = as.integer(CROPDMG) * as.integer(CROPDMGEXP))
 ```
 
+```
+## Warning in as.integer(PROPDMG) * as.integer(PROPDMGEXP): NAs produced by
+## integer overflow
+```
+
+```
+## Warning in as.integer(CROPDMG) * as.integer(CROPDMGEXP): NAs produced by
+## integer overflow
+```
+
 Remove additional columns to simplify data frame.
-```{r, cache = TRUE}
+
+```r
 # Remove additional columns to make data frame as simple as possible
 harm_economy <- harm_economy %>%
         select(-one_of(c("PROPDMG","PROPDMGEXP","CROPDMG","CROPDMGEXP")))
@@ -143,7 +160,8 @@ harm_economy <- harm_economy %>%
 
 After the financial costs are found - find the top 10 event types by combining and summarizing damage to property and crop.
 Summarize the harm from different event types (economic).
-```{r, cache = TRUE}
+
+```r
 # Create a new simplified data frame for economic harm from weather events. Summarize for each event type. Only keep top 10 and sort.
 harm_economy <- harm_economy %>%
       gather(harm_type, cost, PROP:CROP) %>%
@@ -156,9 +174,26 @@ harm_economy <- harm_economy %>%
 harm_economy
 ```
 
+```
+## # A tibble: 10 x 2
+##    EVTYPE               sum_harm
+##    <chr>                   <dbl>
+##  1 TORNADO           54684981458
+##  2 HAIL              17800211845
+##  3 FLASH FLOOD       17328606556
+##  4 DROUGHT           14493502000
+##  5 HIGH WIND          5514598035
+##  6 WILDFIRE           4986864000
+##  7 TSTM WIND          4943390055
+##  8 THUNDERSTORM WIND  3859649144
+##  9 HURRICANE OPAL     3091846000
+## 10 WILD/FOREST FIRE   2588962000
+```
+
 ### Population health data frame
 Simplify data frames for harm to persons. Find the top 10 event types and sort.
-```{r, cache = TRUE}    
+
+```r
 # Remove unneccesary columns for harm to persons
 harm_person <- df %>%
         select(-one_of(c("PROPDMG","PROPDMGEXP","CROPDMG","CROPDMGEXP")))
@@ -180,7 +215,42 @@ harm_person_inj <- harm_person %>%
 
 # Show the top 10 harmful weather events to persons
 harm_person_fat
+```
+
+```
+## # A tibble: 10 x 2
+##    EVTYPE         sum_harm
+##    <chr>             <dbl>
+##  1 TORNADO            5633
+##  2 EXCESSIVE HEAT     1903
+##  3 FLASH FLOOD         978
+##  4 HEAT                937
+##  5 LIGHTNING           816
+##  6 TSTM WIND           504
+##  7 FLOOD               470
+##  8 RIP CURRENT         368
+##  9 HIGH WIND           248
+## 10 AVALANCHE           224
+```
+
+```r
 harm_person_inj
+```
+
+```
+## # A tibble: 10 x 2
+##    EVTYPE            sum_harm
+##    <chr>                <dbl>
+##  1 TORNADO              91346
+##  2 TSTM WIND             6957
+##  3 FLOOD                 6789
+##  4 EXCESSIVE HEAT        6525
+##  5 LIGHTNING             5230
+##  6 HEAT                  2100
+##  7 ICE STORM             1975
+##  8 FLASH FLOOD           1777
+##  9 THUNDERSTORM WIND     1488
+## 10 HAIL                  1361
 ```
 
 ## Results
@@ -190,18 +260,24 @@ The basic goal of this assignment is to explore the NOAA Storm Database and answ
 - **Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?**
 
 Number of fatalities due to a weather event is shown in the figure below.
-```{r, cache = TRUE}
+
+```r
 # Plot bar chart for fatalities, ordered
 p <- ggplot(harm_person_fat, aes(x = reorder(EVTYPE, -sum_harm), sum_harm)) + geom_col(position = position_stack(reverse = TRUE)) + coord_flip() + xlab("Weather event type") + ylab("Number of fatalities") + ggtitle("Number of fatalities due to weather events (1950-2011)")
 p
 ```
 
+![](Course_Project_2_-_Effect_of_Severe_Weather_Effects_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
+
 Number of injuries due to a weather event is shown in the figure below.
-```{r, cache = TRUE}
+
+```r
 # Plot bar chart for injuries, ordered
 p <- ggplot(harm_person_inj, aes(x = reorder(EVTYPE, -sum_harm), sum_harm)) + geom_col(position = position_stack(reverse = TRUE)) + coord_flip() + xlab("Weather event type") + ylab("Number of injuries") + ggtitle("Number of injuries due to weather events (1950-2011)")
 p
 ```
+
+![](Course_Project_2_-_Effect_of_Severe_Weather_Effects_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
 
 The figures above show that tornodoes are the most harmful weather events to persons (both injuries and fatalities). Based on the fatalities from 1950 to 2011, *excessive heat* and *heat* are weather event types which are ranked second and fourth. Hence, it could be added that heat-related events are among the most harmful with respect to population health, in addition to tornadoes - which by far is the most harmful event (from 1950 to 2011).
 
@@ -209,10 +285,13 @@ The figures above show that tornodoes are the most harmful weather events to per
 - **Across the United States, which types of events have the greatest economic consequences?**
 
 The financial cost due to weather events is shown in the figure below.
-```{r, cache = TRUE}
+
+```r
 # Plot bar chart for financial cost, ordered
 p <- ggplot(harm_economy, aes(x = reorder(EVTYPE, -sum_harm), sum_harm)) + geom_col(position = position_stack(reverse = TRUE)) + coord_flip() + xlab("Weather event type") + ylab("Sum of financial cost") + ggtitle("Sum of financial cost due to weather events (1950-2011)")
 p
 ```
+
+![](Course_Project_2_-_Effect_of_Severe_Weather_Effects_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
 
 The figure above shows that tornadoes are the weather events with the highest financial cost (property and crop damage) for the time period 1950-2011. Hail, flash floods and droughts are weather events with large economic consequence, but they are all considerably lower that the consequence from tornadoes.
