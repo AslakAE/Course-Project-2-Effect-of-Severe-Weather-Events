@@ -1,5 +1,5 @@
 ---
-title: 'Effect of Severe Weather Events: Tornadoes with the largest impact from 1950 to 2011'
+title: 'Effect of Severe Weather Events'
 author: "Aslak Eriksen"
 date: "2 4 2019"
 output: 
